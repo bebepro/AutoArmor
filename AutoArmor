@@ -7,6 +7,7 @@ local Player = game.Players.LocalPlayer
 local Stopped = true  -- Start with auto-buying disabled
 local ArmorBought = false -- Track if armor has been bought already
 local buyingActive = false -- Toggle for buying mode
+local Character = Player.Character or Player.CharacterAdded:Wait() -- Get the character or wait for it to load
 
 function announce(title, text, time)
     game.StarterGui:SetCore("SendNotification", {
@@ -18,19 +19,21 @@ end
 
 -- Function to buy armor
 function AutoArmor()
-    if not Player.Character or not Player.Character:FindFirstChild("HumanoidRootPart") then
+    -- Ensure the player's character exists and has a HumanoidRootPart
+    if not Character or not Character:FindFirstChild("HumanoidRootPart") then
         return
     end
 
-    local Armor = Player.Character:FindFirstChild("BodyEffects") and Player.Character.BodyEffects:FindFirstChild("Armor")
+    -- Fetch the armor and armor shop
+    local Armor = Character:FindFirstChild("BodyEffects") and Character.BodyEffects:FindFirstChild("Armor")
     local ArmorShop = game:GetService("Workspace").Ignored.Shop["[High-Medium Armor] - $2440"]
 
     -- Check if armor is below the specified percentage, and buying is active, and armor wasn't bought already
     if Armor and Armor.Value <= PERCENT_TO_BUY_ARMOR and not ArmorBought and Player.DataFolder.Currency.Value >= ArmorCost and buyingActive then
-        local Origin = Player.Character.HumanoidRootPart.CFrame -- Store the original position
+        local Origin = Character.HumanoidRootPart.CFrame -- Store the original position
         
         -- Teleport to the armor shop
-        Player.Character.HumanoidRootPart.CFrame = ArmorShop.Head.CFrame
+        Character.HumanoidRootPart.CFrame = ArmorShop.Head.CFrame
 
         -- Fast click on the armor purchase
         local clickDetector = ArmorShop:FindFirstChild("ClickDetector")
@@ -53,7 +56,7 @@ function AutoArmor()
         until Armor.Value >= 100 or Player.DataFolder.Currency.Value < ArmorCost
 
         -- Teleport back to original position
-        Player.Character.HumanoidRootPart.CFrame = Origin
+        Character.HumanoidRootPart.CFrame = Origin
     end
     
     -- Reset ArmorBought flag if conditions allow buying again
@@ -85,6 +88,12 @@ UIS.InputBegan:Connect(function(input)
             announce("Auto-buy deactivated", "Armor auto-purchase stopped", 5)
         end
     end
+end)
+
+-- Handle the player's character respawning
+Player.CharacterAdded:Connect(function(char)
+    Character = char  -- Update the character reference
+    ArmorBought = false -- Reset the armor bought flag
 end)
 
 -- Start the main function in a coroutine
