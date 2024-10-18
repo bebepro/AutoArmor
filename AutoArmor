@@ -4,7 +4,6 @@ local ArmorCost = 2440  -- Cost of the armor
 
 -- Local variables
 local Player = game.Players.LocalPlayer
-local Stopped = true  -- Start with auto-buying disabled
 local ArmorBought = false -- Track if armor has been bought already
 local buyingActive = false -- Toggle for buying mode
 local Character = Player.Character or Player.CharacterAdded:Wait() -- Get the character or wait for it to load
@@ -95,6 +94,8 @@ end)
 Player.CharacterAdded:Connect(function(char)
     Character = char  -- Update the character reference
     ArmorBought = false -- Reset the armor bought flag
+    -- Restart the main loop for the new character
+    coroutine.resume(coroutine.create(Main))
 end)
 
 -- Start the main function in a coroutine
