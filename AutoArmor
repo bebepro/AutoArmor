@@ -9,93 +9,93 @@ local buyingActive = false -- Toggle for buying mode
 local Character = Player.Character or Player.CharacterAdded:Wait() -- Get the character or wait for it to load
 
 function announce(title, text, time)
-    game.StarterGui:SetCore("SendNotification", {
-        Title = title,
-        Text = text,
-        Duration = time,
-    })
+	game.StarterGui:SetCore("SendNotification", {
+		Title = title,
+		Text = text,
+		Duration = time,
+	})
 end
 
 -- Function to buy armor
 function AutoArmor()
-    -- Ensure the player's character exists and has a HumanoidRootPart
-    if not Character or not Character:FindFirstChild("HumanoidRootPart") then
-        return
-    end
+	-- Ensure the player's character exists and has a HumanoidRootPart
+	if not Character or not Character:FindFirstChild("HumanoidRootPart") then
+		return
+	end
 
-    -- Fetch the armor and armor shop
-    local Armor = Character:FindFirstChild("BodyEffects") and Character.BodyEffects:FindFirstChild("Armor")
-    local ArmorShop = game:GetService("Workspace").Ignored.Shop["[High-Medium Armor] - $2440"]
+	-- Fetch the armor and armor shop
+	local Armor = Character:FindFirstChild("BodyEffects") and Character.BodyEffects:FindFirstChild("Armor")
+	local ArmorShop = game:GetService("Workspace").Ignored.Shop["[High-Medium Armor] - $2440"]
 
-    -- Check if armor is below the specified percentage, and buying is active, and armor wasn't bought already
-    if Armor and Armor.Value <= PERCENT_TO_BUY_ARMOR and not ArmorBought and Player.DataFolder.Currency.Value >= ArmorCost and buyingActive then
-        local Origin = Character.HumanoidRootPart.CFrame -- Store the original position
-        
-        -- Teleport to the armor shop
-        Character.HumanoidRootPart.CFrame = ArmorShop.Head.CFrame
+	-- Check if armor is below the specified percentage, and buying is active, and armor wasn't bought already
+	if Armor and Armor.Value <= PERCENT_TO_BUY_ARMOR and not ArmorBought and Player.DataFolder.Currency.Value >= ArmorCost and buyingActive then
+		local Origin = Character.HumanoidRootPart.CFrame -- Store the original position
 
-        -- Fast click on the armor purchase
-        local clickDetector = ArmorShop:FindFirstChild("ClickDetector")
-        if clickDetector then
-            for i = 1, 5 do  -- Simulate multiple clicks
-                fireclickdetector(clickDetector) -- Simulate clicking the detector
-                wait(0.1) -- Wait time between clicks; adjust for speed
-            end
-        else
-            warn("ClickDetector not found in the armor shop.")
-            return
-        end
+		-- Teleport to the armor shop
+		Character.HumanoidRootPart.CFrame = ArmorShop.Head.CFrame
 
-        -- Set ArmorBought to true after purchasing
-        ArmorBought = true
+		-- Fast click on the armor purchase
+		local clickDetector = ArmorShop:FindFirstChild("ClickDetector")
+		if clickDetector then
+			for i = 1, 5 do  -- Simulate multiple clicks
+				fireclickdetector(clickDetector) -- Simulate clicking the detector
+				wait(0.1) -- Wait time between clicks; adjust for speed
+			end
+		else
+			warn("ClickDetector not found in the armor shop.")
+			return
+		end
 
-        -- Wait for armor to be full or insufficient funds
-        repeat
-            wait(0.1)    
-        until Armor.Value >= 100 or Player.DataFolder.Currency.Value < ArmorCost
+		-- Set ArmorBought to true after purchasing
+		ArmorBought = true
 
-        -- Teleport back to original position
-        Character.HumanoidRootPart.CFrame = Origin
-    end
-    
-    -- Reset ArmorBought flag if conditions allow buying again
-    if Armor and (Armor.Value >= 100 or Player.DataFolder.Currency.Value < ArmorCost) then
-        ArmorBought = false -- Allow purchasing again when armor is full or funds are low
-    end
+		-- Wait for armor to be full or insufficient funds
+		repeat
+			wait(0.1)    
+		until Armor.Value >= 100 or Player.DataFolder.Currency.Value < ArmorCost
+
+		-- Teleport back to original position
+		Character.HumanoidRootPart.CFrame = Origin
+	end
+
+	-- Reset ArmorBought flag if conditions allow buying again
+	if Armor and (Armor.Value >= 100 or Player.DataFolder.Currency.Value < ArmorCost) then
+		ArmorBought = false -- Allow purchasing again when armor is full or funds are low
+	end
 end
 
 -- Main loop to constantly check and buy armor if conditions are met
 function Main()
-    while wait(1) do
-        if buyingActive then  -- Only run if buyingActive is true
-            local success, err = pcall(AutoArmor)
-            if not success then
-                warn("Error in AutoArmor: ", err)
-            end
-        end
-    end
+	while wait(1) do
+		if buyingActive then  -- Only run if buyingActive is true
+			local success, err = pcall(AutoArmor)
+			if not success then
+				warn("Error in AutoArmor: ", err)
+			end
+		end
+	end
 end
 
 -- Connect the button click event to toggle buying
 local button = script.Parent -- Reference to the UI button (TextButton)
 
 button.MouseButton1Click:Connect(function()
-    buyingActive = not buyingActive -- Toggle the state
-    if buyingActive then
-        button.BackgroundColor3 = Color3.new(0.905882, 0.196078, 0.0196078) -- Color when activated (orange)
-        announce("Auto-buy activated", "Armor will be auto-purchased", 5)
-    else
-        button.BackgroundColor3 = Color3.new(0.0117647, 0.0117647, 0.0117647) -- Color when deactivated (black)
-        announce("Auto-buy deactivated", "Armor auto-purchase stopped", 5)
-    end
+	buyingActive = not buyingActive -- Toggle the state
+	if buyingActive then
+		button.BackgroundColor3 = Color3.new(0.905882, 0.196078, 0.0196078) -- Color when activated (orange)
+		announce("Auto-buy activated", "Armor will be auto-purchased", 5)
+	else
+		button.BackgroundColor3 = Color3.new(0.0117647, 0.0117647, 0.0117647) -- Color when deactivated (black)
+		announce("Auto-buy deactivated", "Armor auto-purchase stopped", 5)
+	end
 end)
 
 -- Handle the player's character respawning
 Player.CharacterAdded:Connect(function(char)
-    Character = char  -- Update the character reference
-    ArmorBought = false -- Reset the armor bought flag
-    -- Restart the main loop for the new character
-    coroutine.resume(coroutine.create(Main))
+	Character = char  -- Update the character reference
+	ArmorBought = false -- Reset the armor bought flag
+	-- Restart the main loop for the new character
+	coroutine.resume(coroutine.create(Main))
 end)
 
 -- Start the main function in a coroutine
